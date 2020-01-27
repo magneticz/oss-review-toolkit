@@ -172,7 +172,9 @@ class TableView extends React.Component {
             {
                 align: 'left',
                 dataIndex: 'declaredLicenses',
-                filters: (() => webAppOrtResult.declaredLicenses.map(license => ({ text: license, value: license })))(),
+                filters: (
+                    () => webAppOrtResult.declaredLicenses.map(license => ({ text: license, value: license }))
+                )(),
                 filteredValue: filteredInfo.declaredLicenses || null,
                 filterMultiple: true,
                 key: 'declaredLicenses',
@@ -196,7 +198,9 @@ class TableView extends React.Component {
             {
                 align: 'left',
                 dataIndex: 'detectedLicenses',
-                filters: (() => webAppOrtResult.detectedLicenses.map(license => ({ text: license, value: license })))(),
+                filters: (
+                    () => webAppOrtResult.detectedLicenses.map(license => ({ text: license, value: license }))
+                )(),
                 filteredValue: filteredInfo.detectedLicenses || null,
                 filterMultiple: true,
                 onFilter: (license, component) => component.detectedLicenses.includes(license),

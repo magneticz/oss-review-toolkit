@@ -17,7 +17,7 @@
  * License-Filename: LICENSE
  */
 
-import COLORS from './json/colors';
+import COLORS from './json/colors.json';
 
 export const metadata = {
     packageName: 'unique-colors',

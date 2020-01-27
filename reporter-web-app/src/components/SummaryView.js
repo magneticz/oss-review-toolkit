@@ -104,8 +104,7 @@ class SummaryView extends React.Component {
                                                     violations={webAppOrtResult.violations}
                                                 />
                                             </TabPane>
-                                        )
-                                    }
+                                        )}
                                     { webAppOrtResult.hasIssues()
                                         && (
                                             <TabPane
@@ -137,11 +136,9 @@ class SummaryView extends React.Component {
                                                     showPackageColumn
                                                 />
                                             </TabPane>
-                                        )
-                                    }
+                                        )}
                                 </Tabs>
-                            )
-                        }
+                            )}
                     </Col>
                 </Row>
                 <Row>

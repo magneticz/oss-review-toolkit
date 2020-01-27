@@ -64,39 +64,33 @@ const PackageDetails = (props) => {
                     renderTr(
                         'Defined in',
                         webAppOrtResult.getProjectById(id).definitionFilePath
-                    ))
-                }
+                    ))}
                 { description.length !== 0 && (renderTr('Description', description)) }
                 { homepageUrl.length !== 0 && (
                     renderTr(
                         'Homepage',
                         renderAhref(homepageUrl)
-                    ))
-                }
+                    ))}
                 { vcs.url.length !== 0 && (
                     renderTr(
                         'Repository Declared',
                         renderAhref(vcs.url)
-                    ))
-                }
+                    ))}
                 { vcsProcessed.url.length !== 0 && (
                     renderTr(
                         'Repository Processed',
                         renderAhref(vcsProcessed.url)
-                    ))
-                }
+                    ))}
                 { sourceArtifact.url.length !== 0 && (
                     renderTr(
                         'Source Artifact',
                         renderAhref(sourceArtifact.url)
-                    ))
-                }
+                    ))}
                 { binaryArtifact.url.length !== 0 && (
                     renderTr(
                         'Binary Artifact',
                         renderAhref(binaryArtifact.url)
-                    ))
-                }
+                    ))}
             </tbody>
         </table>
     );

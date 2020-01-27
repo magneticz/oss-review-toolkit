@@ -43,7 +43,7 @@ class ScanFindingsTable extends React.Component {
         };
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         const { pkg, webAppOrtResult } = nextProps;
         const scanFindings = pkg.getScanFindings(webAppOrtResult);
         this.setState(prevState => ({
