@@ -19,11 +19,6 @@
 
 package com.here.ort.reporter.reporters
 
-import com.fasterxml.jackson.databind.ObjectMapper
-
-import com.here.ort.model.jsonMapper
-import com.here.ort.model.yamlMapper
-import com.here.ort.reporter.utils.StatisticsCalculator
 import com.here.ort.reporter.Reporter
 import com.here.ort.reporter.ReporterInput
 import com.here.ort.reporter.model.EvaluatedModel
@@ -31,41 +26,18 @@ import com.here.ort.reporter.model.EvaluatedModel
 import java.io.OutputStream
 
 /**
- * Creates a JSON file containing the evaluated model.
+ * An abstract [Reporter] that generates an [EvaluatedModel]. The model is serialized using the provided [serialize]
+ * function.
  */
-class EvaluatedModelJsonReporter : EvaluatedModelReporter(
-    reporterName = "EvaluatedModelJson",
-    defaultFileName = "evaluated-model-report.json",
-    mapper = jsonMapper
-)
-
-/**
- * Creates a YAML file containing the evaluated model.
- */
-class EvaluatedModelYamlReporter : EvaluatedModelReporter(
-    reporterName = "EvaluatedModelYaml",
-    defaultFileName = "evaluated-model-report.yml",
-    mapper = yamlMapper
-)
-
-/**
- * Creates a file containing the evaluated model using the given [mapper].
- */
-abstract class EvaluatedModelReporter(
-    reporterName: String,
-    defaultFileName: String,
-    private val mapper: ObjectMapper
-) : Reporter {
-    override val reporterName = reporterName
-    override val defaultFilename = defaultFileName
+class EvaluatedModelReporter : Reporter {
+    override val reporterName: String = "EvaluatedModel"
+    override val defaultFilename: String = "evaluated-model.json"
 
     override fun generateReport(outputStream: OutputStream, input: ReporterInput) {
-        val evaluatedModel = EvaluatedModel(
-            stats = StatisticsCalculator().getStatistics(input.ortResult, input.resolutionProvider)
-        )
+        val evaluatedModel = EvaluatedModel.create(input)
 
         outputStream.bufferedWriter().use {
-            it.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(evaluatedModel))
+            it.write(evaluatedModel.toJson())
         }
     }
 }
