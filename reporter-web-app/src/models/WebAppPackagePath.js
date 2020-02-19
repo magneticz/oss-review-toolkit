@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,40 @@
  * License-Filename: LICENSE
  */
 
-/* eslint class-methods-use-this: 0 */
+class WebAppPackagePath {
+    #project = '';
 
-import WebAppOrtIssue from './WebAppOrtIssue';
+    #scope = '';
 
-class WebAppOrtIssueAnalyzer extends WebAppOrtIssue {
-    get type() {
-        return 'ANALYZER';
+    #packages = [];
+
+    constructor(obj) {
+        if (obj) {
+            if (obj.project) {
+                this.#project = obj.project;
+            }
+
+            if (obj.scope) {
+                this.#scope = obj.scope;
+            }
+
+            if (obj.packages) {
+                this.#packages = obj.packages;
+            }
+        }
+    }
+
+    get project() {
+        return this.#project;
+    }
+
+    get scope() {
+        return this.#scope;
+    }
+
+    get packages() {
+        return this.#packages;
     }
 }
 
-export default WebAppOrtIssueAnalyzer;
+export default WebAppPackagePath;

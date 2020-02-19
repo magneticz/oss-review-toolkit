@@ -18,7 +18,6 @@
  */
 
 import memoizeOne from 'memoize-one';
-import { UNIQUE_COLORS } from '../data/colors';
 
 const hasOrtResultChanged = (newArgs, oldArgs) => newArgs.length !== oldArgs.length
     || newArgs[0].data.reportLastUpdate !== oldArgs[0].data.reportLastUpdate;
@@ -35,57 +34,26 @@ export const getOrtResult = state => state.data.ortResult;
 
 // ---- SummaryView selectors ----
 
-const COLORS = UNIQUE_COLORS.data;
-const licenseColors = new Map();
-const getLicenseColor = (license) => {
-    if (licenseColors.has(license)) {
-        return licenseColors.get(license);
-    }
-
-    // License has no assigned color
-    const nrColors = COLORS.length;
-    const color = COLORS[licenseColors.size % nrColors];
-    licenseColors.set(license, color);
-
-    return color;
-};
-const getLicensesWithColors = licenses => Object.entries(licenses)
-    .reduce((accumulator, [key, value]) => {
-        accumulator.push({
-            name: key,
-            value,
-            color: getLicenseColor(key)
-        });
-
-        return accumulator;
-    }, []);
-const getLicensesWithNrPackages = (state, licensesProp) => {
-    const webAppOrtResult = getOrtResult(state);
-    const packages = webAppOrtResult.getPackages();
-    const nrPackagesByLicense = {};
-
-    if (packages) {
-        for (let i = packages.length - 1; i >= 0; i -= 1) {
-            const pkg = packages[i];
-            const licenses = pkg[licensesProp];
-
-            for (let j = licenses.length - 1; j >= 0; j -= 1) {
-                const license = licenses[j];
-                if (!nrPackagesByLicense[license]) {
-                    nrPackagesByLicense[license] = 0;
-                }
-
-                nrPackagesByLicense[license] += 1;
-            }
-        }
-
-        return nrPackagesByLicense;
-    }
-
-    return {};
-};
 export const getSummaryDeclaredLicenses = memoizeOne(
-    state => getLicensesWithColors(getLicensesWithNrPackages(state, 'declaredLicenses')),
+    (state) => {
+        const webAppOrtResult = getOrtResult(state);
+        const { declaredLicenseStats } = webAppOrtResult;
+
+        console.log('getSummaryDeclaredLicenses', webAppOrtResult, declaredLicenseStats);
+
+        return Object.entries(declaredLicenseStats)
+            .reduce((accumulator, [name, value]) => {
+                const license = webAppOrtResult.getLicenseByName(name);
+
+                accumulator.push({
+                    name,
+                    value,
+                    color: license.color
+                });
+
+                return accumulator;
+            }, []);
+    },
     hasOrtResultChanged
 );
 export const getSummaryDeclaredLicensesChart = (state) => {
@@ -100,16 +68,35 @@ export const getSummaryDeclaredLicensesChart = (state) => {
 export const getSummaryDeclaredLicensesFilter = state => state.summary.licenses.declaredFilter;
 export const getSummaryDeclaredLicensesTotal = memoizeOne(
     (state) => {
+        console.log('getSummaryDeclaredLicensesFilter');
         const webAppOrtResult = getOrtResult(state);
-        const { declaredLicenses } = webAppOrtResult;
+        const { declaredLicenseStats } = webAppOrtResult;
 
-        return declaredLicenses.length;
+        return Object.keys(declaredLicenseStats).length;
     },
     hasOrtResultChanged
 );
 
 export const getSummaryDetectedLicenses = memoizeOne(
-    state => getLicensesWithColors(getLicensesWithNrPackages(state, 'detectedLicenses')),
+    (state) => {
+        const webAppOrtResult = getOrtResult(state);
+        const { detectedLicenseStats } = webAppOrtResult;
+
+        console.log('getSummaryDetectedLicenses', webAppOrtResult);
+
+        return Object.entries(detectedLicenseStats)
+            .reduce((accumulator, [name, value]) => {
+                const license = webAppOrtResult.getLicenseByName(name);
+
+                accumulator.push({
+                    name,
+                    value,
+                    color: license.color
+                });
+
+                return accumulator;
+            }, []);
+    },
     hasOrtResultChanged
 );
 export const getSummaryDetectedLicensesChart = (state) => {
@@ -124,10 +111,11 @@ export const getSummaryDetectedLicensesChart = (state) => {
 export const getSummaryDetectedLicensesFilter = state => state.summary.licenses.detectedFilter;
 export const getSummaryDetectedLicensesTotal = memoizeOne(
     (state) => {
+        console.log('getSummaryDetectedLicensesTotal');
         const webAppOrtResult = getOrtResult(state);
-        const { detectedLicenses } = webAppOrtResult;
+        const { declaredLicenseStats } = webAppOrtResult;
 
-        return detectedLicenses.length;
+        return Object.keys(declaredLicenseStats).length;
     },
     hasOrtResultChanged
 );

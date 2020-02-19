@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2019-2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,378 +17,352 @@
  * License-Filename: LICENSE
  */
 
-/* eslint constructor-super: 0 */
-
-import CuratedPackage from './CuratedPackage';
-import OrtResult from './OrtResult';
-import WebAppOrtIssueAnalyzer from './WebAppOrtIssueAnalyzer';
-import WebAppOrtIssueScanner from './WebAppOrtIssueScanner';
+import Statistics from './Statistics';
+import WebAppCopyright from './WebAppCopyright';
+import WebAppLicense from './WebAppLicense';
+import WebAppOrtIssue from './WebAppOrtIssue';
 import WebAppPackage from './WebAppPackage';
+import WebAppPathExclude from './WebAppPathExclude';
+import WebAppScanResult from './WebAppScanResult';
+import WebAppScopeExclude from './WebAppScopeExclude';
+import WebAppTreeNode from './WebAppTreeNode';
 import WebAppRuleViolation from './WebAppRuleViolation';
 
-class WebAppOrtResult extends OrtResult {
-    #declaredLicenses = new Set();
+class WebAppOrtResult {
+    #copyrights = [];
 
-    #detectedLicenses;
+    #customData = {};
+
+    #declaredLicenses = [];
+
+    #declaredLicenseStats = {};
+
+    #dependencyTrees = [];
+
+    #detectedLicenses = [];
+
+    #detectedLicenseStats = {};
 
     #issues = [];
 
-    #levels = new Set();
+    #issuesByPackageIndexMap = new Map();
 
-    #packagesMap = new Map();
+    #issueResolutions = [];
 
-    #packagesTreeArray= [];
+    #levels = [];
 
-    #packagesTreeFlatArray = [];
+    #licenses = [];
 
-    #packagesTreeNodesArray = [];
+    #licensesIndexesByNameMap = new Map();
 
-    #projectsMap = new Map();
+    #packages = [];
 
-    #scanResultContainerIndex = new Map();
+    #pathExcludes = [];
 
-    #scannersUsed = new Set([]);
+    #scanResults = [];
 
-    #scopes;
+    #scopes = [];
 
-    #violations;
+    #statistics = {};
+
+    #scopeExcludes = [];
+
+    #repositoryConfiguration;
+
+    #violations = [];
+
+    #violationsByPackageIndexMap = new Map();
+
+    #violationResolutions = [];
 
     constructor(obj) {
-        super(obj);
-
-        if (obj) {
-            // Populate #packagesMap and #projectsMap with packages Analyzer result
-            const { result: { packages, projects } } = this.analyzer;
-
-            for (let i = packages.length - 1; i >= 0; i -= 1) {
-                const curatedPackage = packages[i];
-
-                if (curatedPackage instanceof CuratedPackage) {
-                    const webAppPackage = new WebAppPackage(curatedPackage.pkg);
-                    webAppPackage.curations = curatedPackage.curations;
-
-                    this.#packagesMap.set(
-                        curatedPackage.pkg.id,
-                        webAppPackage
-                    );
-
-                    webAppPackage.declaredLicenses.forEach((license) => {
-                        this.#declaredLicenses.add(license);
-                    });
+        if (obj instanceof Object) {
+            if (obj.copyrights) {
+                for (let i = 0, len = obj.copyrights.length; i < len; i++) {
+                    this.#copyrights.push(new WebAppCopyright(obj.copyrights[i]));
                 }
             }
 
-            for (let i = projects.length - 1; i >= 0; i -= 1) {
-                this.#projectsMap.set(projects[i].id, projects[i]);
+            if (obj.custom_data || obj.customData) {
+                this.#customData = obj.custom_data || obj.customData;
             }
 
-            // Populate #scanResultContainerIndex with Scannner result for each package
-            const { scanResults } = this.scanner.results;
-            const scannersIndex = new Map();
+            if (obj.declared_license_stats || obj.declaredLicenseStats) {
+                this.#declaredLicenseStats = obj.declared_license_stats || obj.declaredLicenseStats;
+                this.#declaredLicenses = Object.keys(this.#declaredLicenseStats);
+            }
 
-            for (let i = 0, lenScanResults = scanResults.length; i < lenScanResults; i++) {
-                const { id, results: scanResultContainer } = scanResults[i];
+            if (obj.dependency_trees || obj.dependencyTrees) {
+                const dependencyTrees = obj.dependency_trees || obj.dependencyTrees;
 
-                for (let j = 0, lenScanResultContainer = scanResultContainer.length; j < lenScanResultContainer; j++) {
-                    const scanResult = scanResultContainer[j];
-                    const { scanner, summary } = scanResult;
-                    const { issues } = summary;
-                    const scannerId = `${scanner.name}-${scanner.version}`;
+                for (let i = 0, len = dependencyTrees.length; i < len; i++) {
+                    this.#dependencyTrees.push(new WebAppTreeNode(dependencyTrees[i]));
+                }
+            }
 
-                    if (!this.#scannersUsed.has(scannerId)) {
-                        this.#scannersUsed.add(scannerId);
-                        scannersIndex.set(scannerId, j);
+            if (obj.detected_license_stats || obj.detectedLicenseStats) {
+                this.#detectedLicenseStats = obj.detected_license_stats || obj.detectedLicenseStats;
+                this.#detectedLicenses = Object.keys(this.#detectedLicenseStats);
+            }
+
+            if (obj.licenses) {
+                const { licenses } = obj;
+                this.#licensesIndexesByNameMap.clear();
+
+                for (let i = 0, len = licenses.length; i < len; i++) {
+                    this.#licensesIndexesByNameMap.set(licenses[i].id, i);
+                    this.#licenses.push(new WebAppLicense(licenses[i]));
+                }
+            }
+
+            if (obj.packages) {
+                const { packages } = obj;
+                for (let i = 0, len = packages.length; i < len; i++) {
+                    this.#packages.push(new WebAppPackage(packages[i], this));
+                }
+            }
+
+            if (obj.path_excludes || obj.pathExcludes) {
+                const pathExcludes = obj.path_excludes || obj.pathExcludes;
+
+                for (let i = 0, len = pathExcludes.length; i < len; i++) {
+                    this.#pathExcludes.push(new WebAppPathExclude(pathExcludes[i]));
+                }
+            }
+
+            if (obj.pathExcludes) {
+                this.pathExcludes = obj.pathExcludes;
+            }
+
+            if (obj.scan_results || obj.scanResults) {
+                const scanResults = obj.scan_results || obj.scanResults;
+
+                for (let i = 0, len = scanResults.length; i < len; i++) {
+                    this.#scanResults.push(new WebAppScanResult(scanResults[i]));
+                }
+            }
+
+            if (obj.statistics) {
+                const { statistics } = obj;
+                this.#statistics = new Statistics(statistics);
+                const {
+                    dependencyTree: {
+                        excludedScopes,
+                        includedScopes,
+                        totalTreeDepth
                     }
+                } = this.#statistics;
 
-                    if (issues !== 0) {
-                        for (let k = 0, len = issues.length; k < len; k++) {
-                            const webAppOrtIssue = new WebAppOrtIssueScanner(issues[k]);
-                            webAppOrtIssue.pkg = id;
-
-                            this.#issues.push(webAppOrtIssue);
-                        }
+                if (totalTreeDepth) {
+                    for (let i = 0, len = totalTreeDepth; i < len; i++) {
+                        this.#levels.push(i);
                     }
                 }
 
-                this.#scanResultContainerIndex.set(
-                    id,
-                    {
-                        index: i,
-                        scanners: scannersIndex
+                if (excludedScopes && includedScopes) {
+                    this.#scopes = includedScopes.concat(excludedScopes).sort();
+                }
+            }
+
+            if (obj.scope_excludes || obj.scopeExcludes) {
+                const scopeExcludes = obj.scope_excludes || obj.scopeExcludes;
+                for (let i = 0, len = scopeExcludes.length; i < len; i++) {
+                    this.#scopeExcludes.push(new WebAppScopeExclude(scopeExcludes[i]));
+                }
+            }
+
+            if (obj.repository_configuration || obj.repositoryConfiguration) {
+                this.#repositoryConfiguration = obj.repository_configuration
+                    || obj.repositoryConfiguration;
+            }
+
+            if (obj.issues) {
+                this.#issuesByPackageIndexMap.clear();
+
+                for (let i = 0, len = obj.issues.length; i < len; i++) {
+                    const issue = new WebAppOrtIssue(obj.issues[i], this);
+                    const { packageIndex } = issue;
+                    this.#issues.push(issue);
+
+                    if (!this.#issuesByPackageIndexMap.has(packageIndex)) {
+                        this.#issuesByPackageIndexMap.set(packageIndex, [issue]);
+                    } else {
+                        const packageIndexIssues = this.#issuesByPackageIndexMap.get(packageIndex);
+                        packageIndexIssues.push(issue);
+                        this.#issuesByPackageIndexMap.set(packageIndex, packageIndexIssues);
                     }
-                );
+                }
+            }
+
+            if (obj.issue_resolutions || obj.issueResolutions) {
+                this.#issueResolutions = obj.issue_resolutions
+                    || obj.issueResolutions;
+            }
+
+            if (obj.violations) {
+                const { violations } = obj;
+                this.#violationsByPackageIndexMap.clear();
+
+                for (let i = 0, len = violations.length; i < len; i++) {
+                    const violation = new WebAppRuleViolation(violations[i], this);
+                    const { packageIndex } = violation;
+                    this.#violations.push(violation);
+
+                    if (!this.#violationsByPackageIndexMap.has(packageIndex)) {
+                        this.#violationsByPackageIndexMap.set(packageIndex, [violation]);
+                    } else {
+                        const packageIndexViolations = this.#violationsByPackageIndexMap.get(packageIndex);
+                        packageIndexViolations.push(violation);
+                        this.#violationsByPackageIndexMap.set(packageIndex, packageIndexViolations);
+                    }
+                }
+            }
+
+            if (obj.violation_resolutions || obj.violationResolutions) {
+                this.#violationResolutions = obj.violation_resolutions
+                    || obj.violationResolutions;
             }
         }
+    }
+
+    get copyrights() {
+        return this.#copyrights;
+    }
+
+    get customData() {
+        return this.#customData;
     }
 
     get declaredLicenses() {
-        return Array.from(this.#declaredLicenses).sort();
+        return this.#declaredLicenses;
     }
 
-    set declaredLicenses(set) {
-        this.#declaredLicenses = set;
+    get declaredLicenseStats() {
+        return this.#declaredLicenseStats;
+    }
+
+    get dependencyTrees() {
+        return this.#dependencyTrees;
     }
 
     get detectedLicenses() {
-        if (!this.#detectedLicenses) {
-            if (this.#packagesMap.size === 0) {
-                return [];
-            }
-
-            this.#detectedLicenses = new Set();
-
-            this.getPackages().forEach((pkg) => {
-                if (pkg.detectedLicenses.length > 0) {
-                    pkg.detectedLicenses.forEach((license) => {
-                        this.#detectedLicenses.add(license);
-                    });
-                }
-            });
-        }
-
-        return Array.from(this.#detectedLicenses).sort();
+        return this.#detectedLicenses;
     }
 
-    set detectedLicenses(set) {
-        this.#detectedLicenses = set;
+    get detectedLicenseStats() {
+        return this.#detectedLicenseStats;
     }
 
     get issues() {
         return this.#issues;
     }
 
+    get issueResolutions() {
+        return this.#issueResolutions;
+    }
+
     get levels() {
-        return Array.from(this.#levels).sort((a, b) => a - b);
+        return this.#levels;
     }
 
-    get packagesMap() {
-        return this.#packagesMap;
+    get licenses() {
+        return this.#licenses;
     }
 
-    set packagesMap(map) {
-        this.#packagesMap = map;
+    get packages() {
+        return this.#packages;
     }
 
-    get packagesTreeArray() {
-        return this.#packagesTreeArray;
+    get pathExcludes() {
+        return this.#pathExcludes;
     }
 
-    set packagesTreeArray(map) {
-        this.#packagesTreeArray = map;
+    get scanResults() {
+        return this.#scanResults;
     }
 
-    get packagesTreeFlatArray() {
-        return this.#packagesTreeFlatArray;
-    }
-
-    set packagesTreeFlatArray(arr) {
-        this.#packagesTreeFlatArray = arr;
-    }
-
-    get packagesTreeNodesArray() {
-        return this.#packagesTreeNodesArray;
-    }
-
-    set packagesTreeNodesArray(arr) {
-        this.#packagesTreeNodesArray = arr;
-    }
-
-    get projectsMap() {
-        return this.#projectsMap;
+    get scopeExcludes() {
+        return this.#scopeExcludes;
     }
 
     get scopes() {
-        const scopes = new Set([]);
-        const { results: { scannedScopes } } = this.scanner;
+        return this.#scopes;
+    }
 
-        if (!this.#scopes && scannedScopes) {
-            for (let i = 0, len = scannedScopes.length; i < len; i++) {
-                const projectScanScopes = [
-                    ...Object.values(scannedScopes[i].scannedScopes),
-                    ...Object.values(scannedScopes[i].ignoredScopes)
-                ];
+    get statistics() {
+        return this.#statistics;
+    }
 
-                Object.values(projectScanScopes).forEach(
-                    (scope) => {
-                        if (scope && !scopes.has(scope)) {
-                            scopes.add(scope);
-                        }
-                    }
-                );
-            }
-
-            this.#scopes = scopes;
-        }
-
-        return Array.from(this.#scopes);
+    get repositoryConfiguration() {
+        return this.#repositoryConfiguration;
     }
 
     get violations() {
-        const { violations } = this.evaluator;
-
-        if (!this.#violations && violations) {
-            this.#violations = [];
-
-            for (let i = 0, len = violations.length; i < len; i++) {
-                const violation = violations[i];
-                const webAppRuleViolation = new WebAppRuleViolation(violation);
-                this.#violations.push(webAppRuleViolation);
-            }
-        }
-
         return this.#violations;
     }
 
-    addIssue(err) {
-        if (err instanceof WebAppOrtIssueAnalyzer || err instanceof WebAppOrtIssueScanner) {
-            this.#issues.push(err);
-        }
+    get violationResolutions() {
+        return this.#violationResolutions;
     }
 
-    addLevel(level) {
-        if (Number.isInteger(level)) {
-            return this.#levels.add(level);
-        }
-
-        return null;
+    getCopyrightByIndex(val) {
+        return this.#copyrights[val] || null;
     }
 
-    addPackageToPackagesTreeFlatArray(pkg, prepend = false) {
-        if (prepend) {
-            this.#packagesTreeFlatArray.unshift(pkg);
-        } else {
-            this.#packagesTreeFlatArray.push(pkg);
-        }
+    getLicenseByIndex(val) {
+        return this.#licenses[val] || null;
     }
 
-    addPackageToTreeNodesArray(pkg, prepend = false) {
-        if (pkg) {
-            if (prepend) {
-                this.#packagesTreeNodesArray.unshift(pkg);
-            } else {
-                this.#packagesTreeNodesArray.push(pkg);
-            }
-        }
+    getLicenseByName(val) {
+        return this.#licenses[this.#licensesIndexesByNameMap.get(val)] || null;
     }
 
-    addPackage(id, pkg) {
-        if (id && pkg) {
-            return this.#packagesMap.set(id, pkg);
-        }
-
-        return null;
+    getPackageByIndex(val) {
+        return this.#packages[val] || null;
     }
 
-    getOrtVersion() {
-        const {
-            environment: {
-                ortVersion
-            }
-        } = this.analyzer;
-
-        return ortVersion;
+    getIssuesForPackageIndex(val) {
+        return this.#issuesByPackageIndexMap.get(val) || [];
     }
 
-    getPackageById(id) {
-        return this.#packagesMap.get(id);
+    getScanResultByIndex(val) {
+        return this.#scanResults[val] || null;
     }
 
-    getPackages() {
-        return Array.from(this.#packagesMap.values());
-    }
-
-    getPackageIds() {
-        return this.#packagesMap.keys();
-    }
-
-    hasPackageId(id) {
-        return this.#packagesMap.has(id);
-    }
-
-    getProjectById(id) {
-        return this.#projectsMap.get(id);
-    }
-
-    getProjectPackageById(id) {
-        if (this.hasPackageId(id)) {
-            const pkg = this.getPackageById(id);
-            const { projectKey } = pkg;
-            const projects = this.getProjects();
-
-            if (projectKey && projects) {
-                return projects[projectKey];
-            }
-        }
-
-        return null;
-    }
-
-    getProjectByIndex(index) {
-        const projects = this.getProjects();
-
-        if (projects[index]) {
-            return projects[index];
-        }
-
-        return null;
-    }
-
-    getProjects() {
-        return this.analyzer.result.projects;
+    getViolationsForPackageIndex(val) {
+        return this.#violationsByPackageIndexMap.get(val) || [];
     }
 
     hasIssues() {
-        return this.issues.length > 0;
+        const {
+            openIssues: {
+                errors,
+                hints,
+                warnings
+            }
+        } = this.statistics;
+
+        return errors > 0 || hints > 0 || warnings > 0;
     }
 
-    hasProjectId(id) {
-        return this.#projectsMap.has(id);
+    hasIssuesForPackageIndex(val) {
+        return this.#issuesByPackageIndexMap.has(val);
     }
 
     hasViolations() {
-        return this.violations.length > 0;
-    }
-
-    getScannersUsed() {
-        return this.#scannersUsed;
-    }
-
-    getScanSummaryByPackageIdAndByScannerId(id, scannerId) {
-        if (id) {
-            const { results: { scanResults } } = this.scanner;
-
-            if (this.#scanResultContainerIndex.has(id)) {
-                const { index, scanners } = this.#scanResultContainerIndex.get(id);
-                if (scanners.has(scannerId)) {
-                    return scanResults[index].results[scanners.get(scannerId)];
-                }
+        const {
+            openRuleViolations: {
+                errors,
+                hints,
+                warnings
             }
-        }
+        } = this.statistics;
 
-        return null;
+        return errors > 0 || hints > 0 || warnings > 0;
     }
 
-    getScanResultContainerForPackageId(id) {
-        if (id) {
-            const { results: { scanResults } } = this.scanner;
-
-            if (this.#scanResultContainerIndex.has(id)) {
-                const { index } = this.#scanResultContainerIndex.get(id);
-                return scanResults[index];
-            }
-        }
-
-        return null;
-    }
-
-    hasScanResultContainerForPackageId(id) {
-        const scanResultContainer = this.getScanResultContainerForPackageId(id);
-
-        if (scanResultContainer) {
-            return true;
-        }
-
-        return false;
+    hasViolationsForPackageIndex(val) {
+        return this.#violationsByPackageIndexMap.has(val);
     }
 }
 

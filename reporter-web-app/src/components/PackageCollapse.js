@@ -87,7 +87,7 @@ const PackageCollapse = (props) => {
             </Panel>
             {
                 includeLicenses
-                && pkg.hasLicenses(webAppOrtResult)
+                && pkg.hasLicenses()
                 && (
                     <Panel header="Package Licenses" key="2">
                         <PackageLicenses pkg={pkg} webAppOrtResult={webAppOrtResult} />
@@ -96,11 +96,11 @@ const PackageCollapse = (props) => {
             }
             {
                 includeIssues
-                && pkg.hasIssues(webAppOrtResult)
+                && pkg.hasIssues()
                 && (
                     <Panel header="Package Issues" key="3">
                         <IssuesTable
-                            issues={pkg.getIssues(webAppOrtResult)}
+                            issues={pkg.getIssues()}
                             showPackageColumn={false}
                         />
                     </Panel>
@@ -108,12 +108,12 @@ const PackageCollapse = (props) => {
             }
             {
                 includeViolations
-                && pkg.hasViolations(webAppOrtResult)
+                && pkg.hasViolations()
                 && (
                     <Panel header="Package Violations" key="4">
                         <ViolationsTable
                             showPackageColumn={false}
-                            violations={pkg.getViolations(webAppOrtResult)}
+                            violations={pkg.getViolations()}
                         />
                     </Panel>
                 )
@@ -129,8 +129,7 @@ const PackageCollapse = (props) => {
             }
             {
                 includeScanFindings
-                && pkg.hasScanFindings(webAppOrtResult)
-                && pkg.hasDetectedLicenses()
+                && pkg.hasFindings()
                 && (
                     <Panel header="Package Scan Results" key="6">
                         <PackageScanResults

@@ -23,9 +23,11 @@ import PropTypes from 'prop-types';
 // Generates the HTML for packages details like
 // description, source code location(s), etc.
 const PackageDetails = (props) => {
-    const { pkg, webAppOrtResult } = props;
+    const { pkg } = props;
     const {
         id,
+        isProject,
+        definitionFilePath,
         purl,
         description,
         homepageUrl,
@@ -60,13 +62,13 @@ const PackageDetails = (props) => {
             <tbody>
                 {renderTr('Id', id) }
                 { purl.length !== 0 && (renderTr('Package URL', purl)) }
-                { webAppOrtResult.hasProjectId(id) && (
+                { isProject && (
                     renderTr(
                         'Defined in',
-                        webAppOrtResult.getProjectById(id).definitionFilePath
+                        definitionFilePath
                     ))}
-                { description.length !== 0 && (renderTr('Description', description)) }
-                { homepageUrl.length !== 0 && (
+                { description && (renderTr('Description', description)) }
+                { homepageUrl && (
                     renderTr(
                         'Homepage',
                         renderAhref(homepageUrl)
@@ -97,8 +99,7 @@ const PackageDetails = (props) => {
 };
 
 PackageDetails.propTypes = {
-    pkg: PropTypes.object.isRequired,
-    webAppOrtResult: PropTypes.object.isRequired
+    pkg: PropTypes.object.isRequired
 };
 
 export default PackageDetails;

@@ -84,13 +84,13 @@ const IssuesTable = (props) => {
     if (showPackageColumn) {
         columns.push({
             title: 'Package',
-            dataIndex: 'pkg',
-            key: 'pkg',
-            render: text => (
+            dataIndex: 'packageName',
+            key: 'packageName',
+            render: packageName => (
                 <span
                     className="ort-package-id ort-word-break-wrap"
                 >
-                    {text}
+                    {packageName}
                 </span>
             )
         });

@@ -22,36 +22,29 @@ import PropTypes from 'prop-types';
 import { Icon, Table } from 'antd';
 
 // Generates the HTML to display scanFindings as a Table
-class ScanFindingsTable extends React.Component {
+class PackageFindingsTable extends React.Component {
     constructor(props) {
         super(props);
 
         const {
             expandedRowRender,
             filter,
-            pkg,
-            webAppOrtResult
+            pkg
         } = props;
-        const scanFindings = pkg.getScanFindings(webAppOrtResult);
 
         this.state = {
             expandedRowRender,
             filter,
-            pkg,
-            scanFindings,
-            webAppOrtResult
+            pkg
         };
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
-        const { pkg, webAppOrtResult } = nextProps;
-        const scanFindings = pkg.getScanFindings(webAppOrtResult);
+        const { pkg } = nextProps;
         this.setState(prevState => ({
             ...prevState,
             ...{
-                pkg,
-                scanFindings,
-                webAppOrtResult
+                pkg
             }
         }));
     }
@@ -60,9 +53,9 @@ class ScanFindingsTable extends React.Component {
         const {
             expandedRowRender,
             filter,
-            pkg,
-            scanFindings
+            pkg
         } = this.state;
+        const { findings } = pkg;
 
         const columns = [
             {
@@ -87,7 +80,7 @@ class ScanFindingsTable extends React.Component {
                 title: 'Value',
                 dataIndex: 'value',
                 filteredValue: filter.value,
-                filters: (() => pkg.detectedLicenses.map(license => ({ text: license, value: license })))(),
+                filters: (() => pkg.detectedLicenses.forEach(license => ({ text: license, value: license })))(),
                 onFilter: (value, record) => record.value.includes(value),
                 key: 'value',
                 render: value => (
@@ -137,7 +130,7 @@ class ScanFindingsTable extends React.Component {
         return (
             <Table
                 columns={columns}
-                dataSource={scanFindings}
+                dataSource={findings}
                 expandedRowRender={expandedRowRender}
                 locale={{
                     emptyText: 'No scan results'
@@ -160,14 +153,13 @@ class ScanFindingsTable extends React.Component {
     }
 }
 
-ScanFindingsTable.propTypes = {
+PackageFindingsTable.propTypes = {
     filter: PropTypes.object,
     expandedRowRender: PropTypes.func,
-    pkg: PropTypes.object.isRequired,
-    webAppOrtResult: PropTypes.object.isRequired
+    pkg: PropTypes.object.isRequired
 };
 
-ScanFindingsTable.defaultProps = {
+PackageFindingsTable.defaultProps = {
     expandedRowRender: null,
     filter: {
         type: [],
@@ -175,4 +167,4 @@ ScanFindingsTable.defaultProps = {
     }
 };
 
-export default ScanFindingsTable;
+export default PackageFindingsTable;

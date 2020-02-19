@@ -19,29 +19,26 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import ScanFindingsTable from './ScanFindingsTable';
+import PackageFindingsTable from './PackageFindingsTable';
 
 // Generates the HTML to display scan results for a package
 const PackageScanResults = (props) => {
     const {
         filter,
-        pkg,
-        webAppOrtResult
+        pkg
     } = props;
 
     return (
-        <ScanFindingsTable
+        <PackageFindingsTable
             filter={filter}
             pkg={pkg}
-            webAppOrtResult={webAppOrtResult}
         />
     );
 };
 
 PackageScanResults.propTypes = {
     filter: PropTypes.object,
-    pkg: PropTypes.object.isRequired,
-    webAppOrtResult: PropTypes.object.isRequired
+    pkg: PropTypes.object.isRequired
 };
 
 PackageScanResults.defaultProps = {

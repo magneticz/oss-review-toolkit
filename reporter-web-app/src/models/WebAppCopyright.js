@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,30 @@
  * License-Filename: LICENSE
  */
 
-import WebAppScanFinding from './WebAppScanFinding';
+class WebAppCopyright {
+    #_id;
 
-class WebAppScanFindingContainer {
-    #scanFindingsMap;
+    #statement;
 
-    get scanFindingsMap() {
-        return this.#scanFindingsMap;
+    constructor(obj) {
+        if (obj) {
+            if (Number.isInteger(obj._id)) {
+                this.#_id = obj._id;
+            }
+
+            if (obj.statement) {
+                this.#statement = obj.statement;
+            }
+        }
     }
 
-    addScanFinding(scannerId, finding) {
-        if (finding instanceof WebAppScanFinding) {
-            this.#scanFindingsMap.add(scannerId);
-        }
+    get _id() {
+        return this.#_id;
+    }
+
+    get statement() {
+        return this.#statement;
     }
 }
 
-export default WebAppScanFindingContainer;
+export default WebAppCopyright;

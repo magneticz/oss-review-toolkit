@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,40 @@
  * License-Filename: LICENSE
  */
 
-class ScopeExclude {
-    constructor(obj) {
-        this.name = '';
-        this.reason = '';
-        this.comment = '';
+class IssueStatistics {
+    #errors = 0;
 
+    #hints = 0;
+
+    #warnings = 0;
+
+    constructor(obj) {
         if (obj instanceof Object) {
-            Object.keys(this).forEach((key) => {
-                if (obj[key] !== undefined) {
-                    this[key] = obj[key];
-                }
-            });
+            if (obj.errors !== null) {
+                this.#errors = obj.errors;
+            }
+
+            if (obj.hints !== null) {
+                this.#hints = obj.hints;
+            }
+
+            if (obj.warnings !== null) {
+                this.#warnings = obj.warnings;
+            }
         }
+    }
+
+    get errors() {
+        return this.#errors;
+    }
+
+    get hints() {
+        return this.#hints;
+    }
+
+    get warnings() {
+        return this.#warnings;
     }
 }
 
-export default ScopeExclude;
+export default IssueStatistics;

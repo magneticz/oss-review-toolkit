@@ -107,15 +107,17 @@ class TreeView extends React.Component {
     };
 
     onSelectTreeNode = (selectedKeys, e) => {
-        const { node: { props: { dataRef } } } = e;
+        const { node: { props: { dataRef: { packageIndex } } } } = e;
 
-        store.dispatch({
-            type: 'TREE::NODE_SELECT',
-            payload: {
-                selectedPackage: dataRef,
-                selectedKeys
-            }
-        });
+        if (packageIndex !== null && packageIndex >= 0) {
+            store.dispatch({
+                type: 'TREE::NODE_SELECT',
+                payload: {
+                    selectedPackageIndex: packageIndex,
+                    selectedKeys
+                }
+            });
+        }
     }
 
     onClickPreviousSearchMatch = (e) => {
@@ -161,10 +163,11 @@ class TreeView extends React.Component {
         const {
             webAppOrtResult,
             treeView: {
-                selectedPackage,
+                selectedPackageIndex,
                 showDrawer
             }
         } = this.props;
+        const selectedPackage = webAppOrtResult.getPackageByIndex(selectedPackageIndex);
 
         if (!showDrawer) {
             return null;
@@ -174,8 +177,8 @@ class TreeView extends React.Component {
             <Drawer
                 title={
                     (() => {
-                        if (selectedPackage.hasIssues(webAppOrtResult)
-                        || selectedPackage.hasViolations(webAppOrtResult)) {
+                        if (selectedPackage.hasIssues()
+                        || selectedPackage.hasViolations()) {
                             return (
                                 <span>
                                     <Icon
@@ -203,7 +206,6 @@ class TreeView extends React.Component {
                 placement="right"
                 closable
                 onClose={this.onCloseDrawer}
-                mask={false}
                 visible={showDrawer}
                 width="60%"
             >
@@ -222,9 +224,9 @@ class TreeView extends React.Component {
             }
         } = this.props;
 
-        const index = item.id.indexOf(searchValue);
-        const beforeSearchValueStr = item.id.substr(0, index);
-        const afterSearchValueStr = item.id.substr(index + searchValue.length);
+        const index = item.title.indexOf(searchValue);
+        const beforeSearchValueStr = item.title.substr(0, index);
+        const afterSearchValueStr = item.title.substr(index + searchValue.length);
         let title;
 
         if (index > -1) {
@@ -239,13 +241,14 @@ class TreeView extends React.Component {
             );
         } else {
             title = (
-                <span id={`ort-tree-node-${item.key}`}>{item.id}</span>
+                <span id={`ort-tree-node-${item.key}`}>{item.title}</span>
             );
         }
+
         if (item.children) {
             return (
                 <TreeNode
-                    className={item.key}
+                    className={`node-${item.key}`}
                     dataRef={item}
                     key={item.key}
                     title={title}
@@ -257,7 +260,7 @@ class TreeView extends React.Component {
 
         return (
             <TreeNode
-                className={item.key}
+                className={`node-${item.key}`}
                 dataRef={item}
                 key={item.key}
                 title={title}
@@ -269,7 +272,7 @@ class TreeView extends React.Component {
     render() {
         const {
             webAppOrtResult: {
-                packagesTreeArray: tree
+                dependencyTrees: trees
             },
             treeView: {
                 autoExpandParent,
@@ -324,7 +327,7 @@ class TreeView extends React.Component {
                         showLine
                         selectedKeys={selectedKeys}
                     >
-                        {this.renderTreeNode(tree)}
+                        {this.renderTreeNode(trees)}
                     </Tree>
                 </div>
                 <div className="ort-tree-drawer">

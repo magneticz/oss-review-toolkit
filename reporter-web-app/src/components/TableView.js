@@ -1,10 +1,28 @@
+/*
+ * Copyright (C) 2017-2020 HERE Europe B.V.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ * License-Filename: LICENSE
+ */
+
 import React from 'react';
 import { connect } from 'react-redux';
 import {
     Button,
     Icon,
     Table,
-    // Tag,
     Tooltip
 } from 'antd';
 import PropTypes from 'prop-types';
@@ -46,17 +64,17 @@ class TableView extends React.Component {
                 key: 'issues',
                 onFilter: (value, pkg) => {
                     if (value === 'issues') {
-                        return pkg.hasIssues(webAppOrtResult);
+                        return pkg.hasIssues();
                     }
 
                     if (value === 'violations') {
-                        return pkg.hasViolations(webAppOrtResult);
+                        return pkg.hasViolations();
                     }
 
                     return false;
                 },
                 render: (pkg) => {
-                    if (pkg.hasIssues(webAppOrtResult) || pkg.hasViolations(webAppOrtResult)) {
+                    if (pkg.hasIssues() || pkg.hasViolations()) {
                         return (
                             <Icon
                                 type="exclamation-circle"
@@ -76,22 +94,20 @@ class TableView extends React.Component {
             },
             {
                 align: 'right',
-                dataIndex: 'projects',
+                dataIndex: 'packages',
                 filters: (() => {
-                    const projects = webAppOrtResult.getProjects();
-                    return projects.map((project, index) => ({ text: project.definitionFilePath, value: index }));
+                    const { packages } = webAppOrtResult;
+                    return packages.map((pkg, index) => ({ text: pkg.definitionFilePath, value: index }));
                 })(),
-                filteredValue: filteredInfo.projects || null,
-                onFilter: (value, record) => record.projectIndexes.includes(parseInt(value, 10)),
-                render: (text, record) => {
-                    const prj = webAppOrtResult
-                        .getProjectByIndex(record.projectIndexes[0]);
-                    if (prj && prj.definitionFilePath) {
+                filteredValue: filteredInfo.packages || null,
+                onFilter: (value, pkg) => pkg.packageIndex.includes(parseInt(value, 10)),
+                render: (text, pkg) => {
+                    if (pkg.isProject) {
                         return (
-                            <span className="ort-project-id">
+                            <span className="ort-project-icon">
                                 <Tooltip
                                     placement="right"
-                                    title={`Defined in ${prj.definitionFilePath}`}
+                                    title={`Defined in ${pkg.definitionFilePath}`}
                                 >
                                     <Icon type="file-text" />
                                 </Tooltip>
@@ -100,7 +116,7 @@ class TableView extends React.Component {
                     }
 
                     return (
-                        <span className="ort-project-id">
+                        <span className="ort-package-icon">
                             <Icon type="file-text" />
                         </span>
                     );
@@ -110,7 +126,7 @@ class TableView extends React.Component {
             {
                 align: 'left',
                 dataIndex: 'id',
-                onFilter: (value, record) => record.id.includes(value),
+                onFilter: (value, pkg) => pkg.id.includes(value),
                 sorter: (a, b) => {
                     const idA = a.id.toUpperCase();
                     const idB = b.id.toUpperCase();
@@ -138,16 +154,12 @@ class TableView extends React.Component {
                 dataIndex: 'scopes',
                 filters: (() => webAppOrtResult.scopes.map(scope => ({ text: scope, value: scope })))(),
                 filteredValue: filteredInfo.scopes || null,
-                onFilter: (scope, component) => component.scopes.includes(scope),
+                onFilter: (scope, pkg) => pkg.scopes.has(scope),
                 title: 'Scopes',
-                render: (text, row) => (
-                    <ul className="ort-table-list">
-                        {row.scopes.map(scope => (
-                            <li key={`scope-${scope}`}>
-                                {scope}
-                            </li>
-                        ))}
-                    </ul>
+                render: scopes => (
+                    <span>
+                        {Array.from(scopes).join(',')}
+                    </span>
                 )
             },
             {
@@ -156,17 +168,15 @@ class TableView extends React.Component {
                 filters: (() => webAppOrtResult.levels.map(level => ({ text: level, value: level })))(),
                 filteredValue: filteredInfo.levels || null,
                 filterMultiple: true,
-                onFilter: (level, component) => component.levels.includes(parseInt(level, 10)),
-                render: (text, row) => (
-                    <ul className="ort-table-list">
-                        {row.levels.sort().map(level => (
-                            <li key={`level-${level}`}>
-                                {level}
-                            </li>
-                        ))}
-                    </ul>
-                ),
+                onFilter: (level, pkg) => pkg.levels.has(parseInt(level, 10)),
                 title: 'Levels',
+                render: levels => (
+                    <span
+                        className="ort-word-break-wrap"
+                    >
+                        {Array.from(levels).join(', ')}
+                    </span>
+                ),
                 width: 80
             },
             {
@@ -178,20 +188,14 @@ class TableView extends React.Component {
                 filteredValue: filteredInfo.declaredLicenses || null,
                 filterMultiple: true,
                 key: 'declaredLicenses',
-                onFilter: (value, record) => record.declaredLicenses.includes(value),
+                onFilter: (value, pkg) => pkg.declaredLicenses.has(value),
                 title: 'Declared Licenses',
-                render: (text, row) => (
-                    <ul className="ort-table-list">
-                        {row.declaredLicenses.map((license, index) => (
-                            <span
-                                className="ort-word-break-wrap"
-                                key={`ort-package-license-${license}`}
-                            >
-                                {license}
-                                {index !== (row.declaredLicenses.length - 1) && ', '}
-                            </span>
-                        ))}
-                    </ul>
+                render: declaredLicenses => (
+                    <span
+                        className="ort-word-break-wrap"
+                    >
+                        {Array.from(declaredLicenses).join(', ')}
+                    </span>
                 ),
                 width: 160
             },
@@ -203,22 +207,14 @@ class TableView extends React.Component {
                 )(),
                 filteredValue: filteredInfo.detectedLicenses || null,
                 filterMultiple: true,
-                onFilter: (license, component) => component.detectedLicenses.includes(license),
+                onFilter: (license, pkg) => pkg.detectedLicenses.has(license),
                 title: 'Detected Licenses',
-                render: (text, row) => (
-                    <ul className="ort-table-list">
-                        {
-                            row.detectedLicenses.map((license, index) => (
-                                <span
-                                    className="ort-word-break-wrap"
-                                    key={`ort-package-license-${license}`}
-                                >
-                                    {license}
-                                    {index !== (row.detectedLicenses.length - 1) && ', '}
-                                </span>
-                            ))
-                        }
-                    </ul>
+                render: detectedLicenses => (
+                    <span
+                        className="ort-word-break-wrap"
+                    >
+                        {Array.from(detectedLicenses).join(', ')}
+                    </span>
                 ),
                 width: 160
             }
@@ -246,7 +242,7 @@ class TableView extends React.Component {
                             />
                         )
                     }
-                    dataSource={webAppOrtResult.packagesTreeFlatArray}
+                    dataSource={webAppOrtResult.packages}
                     expandRowByClick
                     indentSize={0}
                     locale={{

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,50 @@
  * License-Filename: LICENSE
  */
 
-class AccessStatistics {
-    #numReads = 0;
+class WebAppScopeExclude {
+    #_id;
 
-    #numHits = 0;
+    #comment;
+
+    #pattern;
+
+    #reason;
 
     constructor(obj) {
-        if (obj instanceof Object) {
-            if (obj.num_reads) {
-                this.#numReads = obj.num_reads;
+        if (obj) {
+            if (Number.isInteger(obj._id)) {
+                this.#_id = obj._id;
             }
 
-            if (obj.numReads) {
-                this.#numReads = obj.numReads;
+            if (obj.comment) {
+                this.#comment = obj.comment;
             }
 
-            if (obj.num_hits) {
-                this.#numHits = obj.num_hits;
+            if (obj.pattern) {
+                this.#pattern = obj.pattern;
             }
 
-            if (obj.numHits) {
-                this.#numHits = obj.numHits;
+            if (obj.reason) {
+                this.#reason = obj.reason;
             }
         }
     }
 
-    get numReads() {
-        return this.#numReads;
+    get _id() {
+        return this.#_id;
     }
 
-    get numHits() {
-        return this.#numHits;
+    get comment() {
+        return this.#comment;
+    }
+
+    get pattern() {
+        return this.#pattern;
+    }
+
+    get reason() {
+        return this.#reason;
     }
 }
 
-export default AccessStatistics;
+export default WebAppScopeExclude;

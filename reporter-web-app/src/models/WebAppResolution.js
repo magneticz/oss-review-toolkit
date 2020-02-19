@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,41 +17,50 @@
  * License-Filename: LICENSE
  */
 
-import Excludes from './Excludes';
-import Resolutions from './Resolutions';
+class WebAppResolution {
+    #_id;
 
-class RepositoryConfiguration {
-    #excludes = new Excludes({});
+    #comment;
 
-    #resolutions = new Resolutions({});
+    #message;
+
+    #reason;
 
     constructor(obj) {
-        if (obj instanceof Object) {
-            if (obj.excludes) {
-                this.excludes = obj.excludes;
+        if (obj) {
+            if (Number.isInteger(obj._id)) {
+                this.#_id = obj._id;
             }
 
-            if (obj.resolutions) {
-                this.resolutions = obj.resolutions;
+            if (obj.comment) {
+                this.#comment = obj.comment;
+            }
+
+            if (obj.message) {
+                this.#message = obj.message;
+            }
+
+            if (obj.reason) {
+                this.#reason = obj.reason;
             }
         }
     }
 
-    get excludes() {
-        return this.#excludes;
+    get _id() {
+        return this.#_id;
     }
 
-    set excludes(val) {
-        this.#excludes = new Excludes(val);
+    get comment() {
+        return this.#comment;
     }
 
-    get resolutions() {
-        return this.#resolutions;
+    get message() {
+        return this.#message;
     }
 
-    set resolutions(val) {
-        this.#resolutions = new Resolutions(val);
+    get reason() {
+        return this.#reason;
     }
 }
 
-export default RepositoryConfiguration;
+export default WebAppResolution;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 HERE Europe B.V.
+ * Copyright (C) 2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,50 @@
  * License-Filename: LICENSE
  */
 
-class ArtifactoryStorageConfiguration {
+class WebAppPathExclude {
+    #_id;
+
+    #comment;
+
+    #pattern;
+
+    #reason;
+
     constructor(obj) {
-        this.url = '';
-        this.repository = '';
-        this.apiToken = '';
-
-        if (obj instanceof Object) {
-            if (obj.url) {
-                this.url = obj.url;
+        if (obj) {
+            if (Number.isInteger(obj._id)) {
+                this.#_id = obj._id;
             }
 
-            if (obj.repository) {
-                this.repository = obj.repository;
+            if (obj.comment) {
+                this.#comment = obj.comment;
             }
 
-            if (obj.api_token) {
-                this.apiToken = obj.api_token;
+            if (obj.pattern) {
+                this.#pattern = obj.pattern;
             }
 
-            if (obj.apiToken) {
-                this.apiToken = obj.apiToken;
+            if (obj.reason) {
+                this.#reason = obj.reason;
             }
         }
     }
+
+    get _id() {
+        return this.#_id;
+    }
+
+    get comment() {
+        return this.#comment;
+    }
+
+    get pattern() {
+        return this.#pattern;
+    }
+
+    get reason() {
+        return this.#reason;
+    }
 }
 
-export default ArtifactoryStorageConfiguration;
+export default WebAppPathExclude;

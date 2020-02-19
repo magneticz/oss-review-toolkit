@@ -17,34 +17,26 @@
  * License-Filename: LICENSE
  */
 
-class TextLocation {
+class ScannerDetails {
     constructor(obj) {
-        this.path = '';
-        this.startLine = '';
-        this.endLine = '';
+        this.name = '';
+        this.version = '';
+        this.configuration = '';
 
         if (obj instanceof Object) {
-            if (obj.path) {
-                this.path = obj.path;
+            if (obj.name) {
+                this.name = obj.name;
             }
 
-            if (obj.start_line) {
-                this.startLine = obj.start_line;
+            if (obj.version) {
+                this.version = obj.version;
             }
 
-            if (obj.startLine) {
-                this.startLine = obj.startLine;
-            }
-
-            if (obj.end_line) {
-                this.endLine = obj.end_line;
-            }
-
-            if (obj.endLine) {
-                this.endLine = obj.endLine;
+            if (obj.configuration) {
+                this.configuration = obj.configuration;
             }
         }
     }
 }
 
-export default TextLocation;
+export default ScannerDetails;

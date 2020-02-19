@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 HERE Europe B.V.
+ * Copyright (C) 2017-2020 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ const PackageLicenses = (props) => {
         declaredLicensesProcessed
     } = pkg;
 
+    console.log('pkg', pkg);
+
     if (declaredLicenses.length === 0 && detectedLicenses.length === 0) {
         return null;
     }
@@ -46,25 +48,14 @@ const PackageLicenses = (props) => {
         </tr>
     );
 
-    const renderTrLicenses = (label, id, licenses) => (
+    const renderTrLicenses = (label, licenses) => (
         <tr>
             <th>
                 {label}
             </th>
             <td className="ort-package-licenses">
                 {
-                    licenses.map((license, index) => (
-                        <span key={`ort-package-license-${license}`}>
-                            {license}
-                            {index !== (licenses.length - 1) && ', '}
-                        </span>
-                        /*
-                        <LicenseTag
-                            key={`ort-package-declared-license-${id}-${license}`}
-                            text={license}
-                        />
-                        */
-                    ))
+                    Array.from(licenses).join(', ')
                 }
             </td>
         </tr>
@@ -74,7 +65,8 @@ const PackageLicenses = (props) => {
         <table className="ort-package-props">
             <tbody>
                 {
-                    concludedLicense.length !== 0 && (
+                    concludedLicense
+                    && (
                         renderTr(
                             'Concluded SPDX',
                             concludedLicense
@@ -82,15 +74,16 @@ const PackageLicenses = (props) => {
                     )
                 }
                 {
-                    declaredLicenses.length !== 0
+                    declaredLicenses.size !== 0
                     && renderTrLicenses(
                         'Declared',
-                        pkg.id,
                         declaredLicenses
                     )
                 }
                 {
-                    declaredLicensesProcessed.spdxExpression.length !== 0 && (
+                    declaredLicensesProcessed
+                    && declaredLicensesProcessed.spdxExpression.length !== 0
+                    && (
                         renderTr(
                             'Declared (SPDX)',
                             declaredLicensesProcessed.spdxExpression
@@ -98,10 +91,9 @@ const PackageLicenses = (props) => {
                     )
                 }
                 {
-                    detectedLicenses.length !== 0
+                    detectedLicenses.size !== 0
                     && renderTrLicenses(
                         'Detected',
-                        pkg.id,
                         detectedLicenses
                     )
                 }

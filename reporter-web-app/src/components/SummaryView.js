@@ -25,7 +25,7 @@ import {
 } from 'antd';
 import IssuesTable from './IssuesTable';
 import SummaryViewLicenses from './SummaryViewLicenses';
-import SummaryViewTimeline from './SummaryViewTimeline';
+// import SummaryViewTimeline from './SummaryViewTimeline';
 import PackageCollapse from './PackageCollapse';
 import ViolationsTable from './ViolationsTable';
 import {
@@ -50,6 +50,13 @@ class SummaryView extends React.Component {
         return shouldComponentUpdate;
     }
 
+    /*
+        <Row>
+            <Col span={22} offset={1}>
+                <SummaryViewTimeline webAppOrtResult={webAppOrtResult} />
+            </Col>
+        </Row>
+    */
     render() {
         const {
             licenses,
@@ -58,11 +65,6 @@ class SummaryView extends React.Component {
 
         return (
             <div className="ort-summary">
-                <Row>
-                    <Col span={22} offset={1}>
-                        <SummaryViewTimeline webAppOrtResult={webAppOrtResult} />
-                    </Col>
-                </Row>
                 <Row>
                     <Col span={22} offset={1}>
                         {(webAppOrtResult.hasIssues() || webAppOrtResult.hasViolations())
@@ -84,7 +86,11 @@ class SummaryView extends React.Component {
                                                     expandedRowRender={
                                                         violation => (
                                                             <PackageCollapse
-                                                                pkg={webAppOrtResult.getPackageById(violation.pkg)}
+                                                                pkg={
+                                                                    webAppOrtResult.getPackageByIndex(
+                                                                        violation.packageIndex
+                                                                    )
+                                                                }
                                                                 filterScanFindings={{
                                                                     type: ['LICENSE'],
                                                                     value: [violation.license]
@@ -121,7 +127,11 @@ class SummaryView extends React.Component {
                                                     expandedRowRender={
                                                         issue => (
                                                             <PackageCollapse
-                                                                pkg={webAppOrtResult.getPackageById(issue.pkg)}
+                                                                pkg={
+                                                                    webAppOrtResult.getPackageByIndex(
+                                                                        issue.packageIndex
+                                                                    )
+                                                                }
                                                                 includeIssues={false}
                                                                 includeScanFindings={false}
                                                                 includeViolations={false}
