@@ -106,6 +106,18 @@ The result file will contain information about the `mime-types` package itself, 
 information about each dependency. The scope names come from the package managers, for NPM packages these are usually
 `dependencies` and `devDependencies`, for Maven package it would be `compile`, `runtime`, `test`, and so on.
 
+By default, `analyzer-result.yml` will not contain any information, about scopes that can be excluded in later steps (for example, to skip downloading and scanning `devDependencies`). To specify, which scopes should be skipped, add `.ort.yml` configuration file to the root directory of the repo. For more details on config files see [Configuration File](config-file-ort-yml.md).
+
+In our case, we will add `[mime-types-path]/npm.ort.yml` with following content:
+
+```yaml
+excludes:
+  scopes:
+  - pattern: "devDependencies"
+    reason: "DEV_DEPENDENCY_OF"
+    comment: "Packages for development only."
+```
+
 Following is an overview of the structure of the `analyzer-result.yml` file (comments were added for clarity and are not
 part of a real result file):
 
@@ -122,7 +134,13 @@ repository:
     url: "https://github.com/jshttp/mime-types.git"
     revision: "7c4ce23d7354fbf64c69d7b7be8413c4ba2add78"
     path: ""
-  config: {}
+  # Will be added, in case .ort.yml file is provided. Otherwise empty object
+  config:
+    excludes:
+      scopes:
+      - pattern: "devDependencies"
+        reason: "DEV_DEPENDENCY_OF"
+        comment: "Packages for development only."
 # The analyzer result.
 analyzer:
   # The time when the analyzer was executed.
@@ -254,8 +272,10 @@ scanner on the `dependencies` scope in this tutorial. If you also want to scan t
 advised to configure a cache for the scan results as documented in the [README](../README.md) to speed up repeated
 scans.
 
+Because during _analyzer_ step we provided `.ort.yml` config file to exclude `devDependencies`, we just need to provide `--skip-excluded` parameter to scan only `dependencides` scope
+
 ```bash
-$ cli/build/install/ort/bin/ort scan -i [analyzer-output-path]/analyzer-result.yml -o [scanner-output-path] --scopes dependencies
+$ cli/build/install/ort/bin/ort scan -i [analyzer-output-path]/analyzer-result.yml -o [scanner-output-path] --skip-excluded
 Using scanner 'ScanCode'.
 Limiting scan to scopes: [dependencies]
 Bootstrapping scanner 'ScanCode' as required version 2.9.2 was not found in PATH.
